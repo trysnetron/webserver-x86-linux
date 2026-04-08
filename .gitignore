@@ -1,3 +1,4 @@
-socket
-server
+*.o
+*.out
+
 *.pdf
