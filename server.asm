@@ -2,7 +2,6 @@
 ; By Trym Sneltvedt
 
 ; System calls
-%define sys_read        0
 %define sys_write       1
 %define sys_close       3
 %define sys_socket     41
@@ -15,17 +14,17 @@
 %define STDOUT 1
 %define AF_INET 2
 %define SOCK_STREAM 1
-%define SOL_SOCKET 1
 
-; Static data section
+
+
 section .data
 
 startup_msg:     db "Listening on 127.0.0.1:8001", 10
 startup_msg_len: equ $ - startup_msg
 
-http_response:  db "HTTP/1.1 200 OK", 13, 10, \
-                 "Content-Length: 116", 13, 10, \
-                 13, 10, 13, 10, \
+http_response:  db "HTTP/1.0 200 OK", 13, 10, \
+                 "Content-Length: 114", 13, 10, \
+                 13, 10, \
                  "<!DOCTYPE html><html>", \
                    "<head><title>Wuhu</title></head>", \
                    "<body><h1>Very good</h1><p>Really very good</p></body>", \
@@ -39,22 +38,26 @@ error_msg_len: equ $ - error_msg
 sockaddr:
 sockaddr_family:  dw AF_INET       ; IPv4 socket
 sockaddr_port:    db 0x1f, 0x41    ; Port 8001 (0x1f41)
-sockaddr_address: db 127, 0, 0, 1  ; Listen on loopbakc (localhost) address
+sockaddr_address: db 127, 0, 0, 1  ; Listen on loopback (localhost) address
 sockaddr_padding: dq 0             ; 8 bytes padding, sockaddr data must be 16 bytes total
 sockaddr_len:     equ $ - sockaddr
+
+
 
 ; Executable code section
 section .text
 
-global _start ; main is entrypoint
+global _start ; entrypoint
 
 _start:
-  ; Create socket (sys_socket)
+  ; Create IPv4/TCP socket
   mov rax, sys_socket
   mov rdi, AF_INET     ; domain AF_INET
   mov rsi, SOCK_STREAM ; type SOCK_STREAM (Transmission Control Protocol)
   mov rdx, 0           ; protocol, none
   syscall
+  cmp rax, 0
+  jl error
 
   ; Move socket file descriptor to known location
   mov r12, rax
@@ -71,7 +74,7 @@ _start:
   ; Listen for connections (sys_listen)
   mov rax, sys_listen
   mov rdi, r12
-  mov rsi, 200 ; Backlog (allow 10 connections to wait)
+  mov rsi, 200 ; Backlog
   syscall
   cmp rax, 0
   jl error
