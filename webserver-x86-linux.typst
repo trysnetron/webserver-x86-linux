@@ -1,0 +1,143 @@
+#import "@preview/touying:0.7.1": *
+#import themes.simple: *
+
+#show: simple-theme.with(aspect-ratio: "16-9")
+
+= Webserver i x86 asm
+
+== Plan
+
+- Motivasjon
+- Målsetting
+- Teknisk grunnlag
+- Kode + Demo
+- Diskusjon
+
+
+= Hvorfor?
+
+
+== Målsetting
+
+- #strike[Interface med hardware]
+- #strike[Implentere en fullverdig webserver]
+- Servere HTML til en nettleser
+- Ingen biblioteker
+- Kun assembly
+
+
+== Hva _trenger_ en webserver?
+
+1. Transport
+2. Å følge HTTP-protokollen (Riktig format på respons)
+
+
+== Sockets
+
+Abstraksjon over nettverkskommunikasjon
+
+Alt er en fil#sym.trademark
+
+
+== Snakke med kernelen
+
+Systemkall (syscalls)
+
+Standardbiblioteket i C
+
+
+== Nødvendige systemkall
+
+1. `socket` - Opprette en socket
+2. `bind` - Knytte en socket til en nettverksport
+3. `listen` - "Aktivere" socketen
+4. `accept` - Motta en socket for en ny tilkobling
+5. `write` - Sende data til en socket
+6. `close` - Lukke en socket
+
+
+== Assembly
+
+Lavnivå programmeringsspråk #sym.arrow.r ikke portabelt mellom prosessorarkitekturer
+
+1-til-1 (omtrent) med hva prosessoren utfører
+
+
+== x86-64
+
+64-bits instruksjonssettarkitektur, designet av Intel+AMD
+
+Registre: `rax`, `rbx`, `rcx`, `rsi`, `rdi`, `r8` #sym.arrow.r `r15`
+
+Instruksjoner: `mov`, `jmp`, `cmp`, `jl`
+
+Pseudoinstruksjon `syscall`
+
+
+== Flytte data
+
+```asm
+mov [destinasjon], [opprinnelse/data]
+```
+
+
+== Flytkontroll
+
+```asm
+jmp [label]
+
+[label]:
+```
+
+
+== Mer flytkontroll og aritmetikk
+
+```asm
+cmp [lokasjon 1], [lokasjon 2]
+
+jl [label] ; jmp hvis lokasjon 1 < lokasjon 2
+```
+
+== Rådata
+
+
+```asm
+[label]: db "abcd"
+
+[label_lengde]: equ $ - [label]
+```
+
+Legg merke til at "alt" er data
+
+
+== Systemkall i assembly
+
+```asm
+mov rax, [systemkall-ID]
+mov rdi, [argument 1]
+mov rsi, [argument 2]
+mov rdx, [argument 3]
+
+syscall                  ; pseudo-instruksjon
+
+cmp rax, 0               ; feilhåndtering, sjekk "returverdi"
+jl error                 ; gå til feilhåndteringskode om noe er galt
+```
+
+
+= Kode + Demo
+
+
+== Ytelse
+
+#let results = csv("results.csv")
+
+#table(columns: 5, ..results.flatten())
+
+#figure(image("Requests_s.svg"))
+
+= Burde vi skrive assembly?
+
+
+= Takk for meg
+

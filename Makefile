@@ -5,3 +5,6 @@ all:
 
 sb:
 	gcc sandbox.c -o sandbox && ./sandbox
+
+presentation:
+	typst compile webserver-x86-linux.typst
